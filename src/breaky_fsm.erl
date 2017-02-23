@@ -231,7 +231,10 @@ handle_info({initialize, Sup, Spec}, initializing, State) ->
     ChildSpec = {breaky_fsm_sup, 
             {breaky_fsm_sup, start_link, [Spec]},
              permanent, 10000, supervisor, [breaky_fsm_sup]},
-    {ok, SupPid} = supervisor:start_child(Sup, ChildSpec),
+    {ok, SupPid} = case supervisor:start_child(Sup, ChildSpec) of
+                       {ok, Pid}                       -> {ok, Pid};
+                       {error, {already_started, Pid}} -> {ok, Pid}
+                   end,
     {NextState, NewState} = start_process(State#state{sup=SupPid}),
     {next_state, NextState, NewState};    
 handle_info({initialize, _Sup, _Spec}, _Other, State) ->
